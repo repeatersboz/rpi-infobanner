@@ -1,0 +1,60 @@
+#!/bin/bash
+
+## Get values
+
+## Network
+locip=$(hostname -I | cut -d' ' -f1)
+wanip=$(dig @resolver4.opendns.com myip.opendns.com +short)
+wgip=$(ip -f inet addr show wg0 | sed -En -e 's/.*inet ([0-9.]+).*/\1/p')
+lhname=$(hostname)
+whname=$(nslookup $wanip | grep  "name =" | awk '{print $4}' | sed 's/.$//')
+
+## Raspberry Pi
+rpimodel=$(tr -d '\0' < /proc/device-tree/model)
+cputemp=$(vcgencmd measure_temp  | sed s/"temp="// | sed s/"'C"//)
+cpumodel=$(lscpu | grep 'Model name:' | sed 's/Model name://' | awk '{$1=$1;print}')
+cpuspeed=$(vcgencmd get_config arm_freq | sed s/"arm_freq="//)
+
+## Memory
+totmem=$(cat /proc/meminfo | grep "MemTotal" | sed 's/MemTotal://' | sed 's/kB//' | awk '{$1=$1;print}' | awk '{print $1/(1024)}' | awk '{printf "%d\n", int($0)}')
+availablemem=$(cat /proc/meminfo | grep "MemAvailable" | sed 's/MemAvailable://' | sed 's/kB//' | awk '{$1=$1;print}' | awk '{print $1/(1024)}' | awk '{printf "%d\n", int($0)}')
+
+## Disk
+totdisk=
+availabledisk=
+
+## Statistics
+
+
+## Echo values
+echo ""
+echo "Network"
+echo "-------"
+echo "Local IP          = $locip"
+echo "WAN IP            = $wanip"
+echo "WireGuard IP      = $wgip"
+echo "Local Hostname    = $lhname"
+echo "WAN Hostname      = $whname"
+echo ""
+echo "Raspberry Pi"
+echo "------------"
+echo "Raspberry Pi      = $rpimodel"
+echo "temperature       = $cputemp"
+echo "CPU Model         = $cpumodel"
+echo "CPU Speed (MHz)   = $cpuspeed"
+echo ""
+echo "Memory"
+echo "----------"
+echo "Total Memory (MB) = $totmem"
+echo "Free Memory (MB)  = $availablemem"
+echo ""
+echo "Disk"
+echo "----"
+echo "Total Disk (MB)   = $totdisk"
+echo "Free Disk (MB)    = $availabledisk"
+echo ""
+echo "Statistics"
+echo "----------"
+echo "Load Average      ="
+echo "Running Pocesses  ="
+echo ""
