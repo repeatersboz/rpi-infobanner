@@ -1,4 +1,4 @@
-# Raspbrry Pi info banner
+# Raspberry Pi info banner
 
 ## Info banner
 - Info banner
