@@ -20,13 +20,17 @@ totmem=$(cat /proc/meminfo | grep "MemTotal" | sed 's/MemTotal://' | sed 's/kB//
 availablemem=$(cat /proc/meminfo | grep "MemAvailable" | sed 's/MemAvailable://' | sed 's/kB//' | awk '{$1=$1;print}' | awk '{print $1/(1024)}' | awk '{printf "%d\n", int($0)}')
 
 ## Disk
-totdisk=
-availabledisk=
+rootpart=$(df | grep /dev/root | awk '{print $2}' | awk '{print $1/1024}')
+bootpart=$(df | grep /boot | awk '{print $2}' | awk '{print $1/1024}')
+disktotal=$(calc $bootpart + $rootpart)
+rootavailable=$(df | grep /dev/root | awk '{print $4}' | awk '{print $1/1024}')
+bootavailable=$(df | grep /boot | awk '{print $4}' | awk '{print $1/1024}')
+available=$(calc $rootavailable+$bootavailable)
 
 ## Statistics
 
 
-## Echo values
+## Display values
 echo ""
 echo "Network"
 echo "-------"
@@ -48,10 +52,12 @@ echo "----------"
 echo "Total Memory (MB) = $totmem"
 echo "Free Memory (MB)  = $availablemem"
 echo ""
-echo "Disk"
-echo "----"
-echo "Total Disk (MB)   = $totdisk"
-echo "Free Disk (MB)    = $availabledisk"
+echo "SD Card"
+echo "-------"
+echo "Total     /boot/ (MB)     = $bootpart"
+echo "Total     /dev/root/ (MB) = $rootpart"
+echo "Free /boot/ (MB)          = $bootavailable"
+echo "Free /dev/root/ (MB)      = $rootavailable"
 echo ""
 echo "Statistics"
 echo "----------"
