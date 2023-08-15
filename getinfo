@@ -2,6 +2,11 @@
 
 ## Get values
 
+## Operating system
+os=$(cat /etc/os-release | grep PRETTY | sed 's/PRETTY_NAME=//' | sed 's|["",]||g')
+kernelrel=$(uname -r)
+kernelver=$(uname -v)
+
 ## Network
 locip=$(hostname -I | cut -d' ' -f1)
 wanip=$(dig @resolver4.opendns.com myip.opendns.com +short)
@@ -14,53 +19,70 @@ rpimodel=$(tr -d '\0' < /proc/device-tree/model)
 cputemp=$(vcgencmd measure_temp  | sed s/"temp="// | sed s/"'C"//)
 cpumodel=$(lscpu | grep 'Model name:' | sed 's/Model name://' | awk '{$1=$1;print}')
 cpuspeed=$(vcgencmd get_config arm_freq | sed s/"arm_freq="//)
+cpucores=$(grep -c ^processor /proc/cpuinfo)
 
 ## Memory
 totmem=$(cat /proc/meminfo | grep "MemTotal" | sed 's/MemTotal://' | sed 's/kB//' | awk '{$1=$1;print}' | awk '{print $1/(1024)}' | awk '{printf "%d\n", int($0)}')
 availablemem=$(cat /proc/meminfo | grep "MemAvailable" | sed 's/MemAvailable://' | sed 's/kB//' | awk '{$1=$1;print}' | awk '{print $1/(1024)}' | awk '{printf "%d\n", int($0)}')
 
 ## Disk
-rootpart=$(df | grep /dev/root | awk '{print $2}' | awk '{print $1/1024}')
-bootpart=$(df | grep /boot | awk '{print $2}' | awk '{print $1/1024}')
+rootpart=$(df | grep /dev/root | awk '{print $2}' | awk '{print $1/1024}' | awk '{printf "%d\n", int($0)}')
+bootpart=$(df | grep /boot | awk '{print $2}' | awk '{print $1/1024}' | awk '{printf "%d\n", int($0)}')
 disktotal=$(calc $bootpart + $rootpart)
-rootavailable=$(df | grep /dev/root | awk '{print $4}' | awk '{print $1/1024}')
-bootavailable=$(df | grep /boot | awk '{print $4}' | awk '{print $1/1024}')
+rootavailable=$(df | grep /dev/root | awk '{print $4}' | awk '{print $1/1024}' | awk '{printf "%d\n", int($0)}')
+bootavailable=$(df | grep /boot | awk '{print $4}' | awk '{print $1/1024}' | awk '{printf "%d\n", int($0)}')
 available=$(calc $rootavailable+$bootavailable)
 
 ## Statistics
-
+runproc=$(ps -e | wc -l)
+loadavg=$(uptime | awk -F'[a-z]:' '{ print $2}' | cut -c 2-)
+uptime=$(uptime -p | sed 's/up//' | cut -c 2-)
+upsince=$(uptime -s)
+casetemp=$(cat /etc/ncbr/tmp/temp)
+casehum=$(cat /etc/ncbr/tmp/hum)
 
 ## Display values
 echo ""
+echo "Operating system"
+echo "-----------------"
+echo "OS Version                 = $os"
+echo "Kernel Release             = $kernelrel"
+echo "Kernel Version             = $kernelver"
+echo ""
 echo "Network"
 echo "-------"
-echo "Local IP          = $locip"
-echo "WAN IP            = $wanip"
-echo "WireGuard IP      = $wgip"
-echo "Local Hostname    = $lhname"
-echo "WAN Hostname      = $whname"
+echo "Local IP                   = $locip"
+echo "WAN IP                     = $wanip"
+echo "WireGuard IP               = $wgip"
+echo "Local Hostname             = $lhname"
+echo "WAN Hostname               = $whname"
 echo ""
 echo "Raspberry Pi"
 echo "------------"
-echo "Raspberry Pi      = $rpimodel"
-echo "temperature       = $cputemp"
-echo "CPU Model         = $cpumodel"
-echo "CPU Speed (MHz)   = $cpuspeed"
+echo "Raspberry Pi               = $rpimodel"
+echo "CPU Temperature (°C)       = $cputemp"
+echo "CPU Model                  = $cpumodel"
+echo "CPU Speed (MHz)            = $cpuspeed"
+echo "CPU Cores                  = $cpucores"
 echo ""
 echo "Memory"
 echo "----------"
-echo "Total Memory (MB) = $totmem"
-echo "Free Memory (MB)  = $availablemem"
+echo "Total Memory (MB)          = $totmem"
+echo "Free Memory (MB)           = $availablemem"
 echo ""
 echo "SD Card"
 echo "-------"
-echo "Total     /boot/ (MB)     = $bootpart"
-echo "Total     /dev/root/ (MB) = $rootpart"
-echo "Free /boot/ (MB)          = $bootavailable"
-echo "Free /dev/root/ (MB)      = $rootavailable"
+echo "Total /boot/ (MB)          = $bootpart"
+echo "Total /dev/root/ (MB)      = $rootpart"
+echo "Free /boot/ (MB)           = $bootavailable"
+echo "Free /dev/root/ (MB)       = $rootavailable"
 echo ""
 echo "Statistics"
 echo "----------"
-echo "Load Average      ="
-echo "Running Pocesses  ="
+echo "Load Average (1/5/15) Mins = $loadavg"
+echo "Running Pocesses           = $runproc"
+echo "Up since                   = $upsince"
+echo "Uptime                     = $uptime"
+echo "Case Temperature (°C)      = $casetemp"
+echo "Case Humidity (%)          = $casehum"
 echo ""
